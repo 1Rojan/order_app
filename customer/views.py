@@ -15,59 +15,38 @@ class About(View):
   def get(self, request, *args, **kwargs):
     return render(request, 'customer/about.html')
 
-
 class Order(View):
-  def get(self, request,*args, **kwargs):
-  #   categories = Category.objects.all()
-  #   context = {}
-  #   for category in categories:
-  #     name = category.name
-  #     name1 = MenuItem.objects.filter(category__name__contains=name)
-  #     context[name] = name1
-  #   return render(request, 'customer/order.html', context)
 
-    appetizers = MenuItem.objects.filter(category__name__contains='Appetizer')
-    entres = MenuItem.objects.filter(category__name__contains='Antre')
-    desserts = MenuItem.objects.filter(category__name__contains='Dessert')
-    drinks = MenuItem.objects.filter(category__name__contains='Drink')
-
-    context= {
-      'appetizers': appetizers,
-      'entres': entres,
-      'desserts':desserts,
-      'drinks':drinks
-    }
-
-    return render(request, 'customer/order.html', context)
-
+  def get(self, request, *args, **kwargs):
+    categories = Category.objects.all()
+    return render(request, 'customer/place_order.html', {'categories':categories})
 
   def post(self, request, *args, **kwargs):
-    order_items = {
-      'items':[]
-    }
-    items = request.POST.getlist('items[]')
-    for item in items:
-      menu_item = MenuItem.objects.get(pk__contains=int(item))
+    order_items = []
+    order_item_ids = request.POST.getlist('item[]')
+    for item_id in order_item_ids:
+      item = MenuItem.objects.get(pk__contains=item_id)
       item_data = {
-        'id': menu_item.pk,
-        'name': menu_item.name,
-        'price': menu_item.price  
+        'pk':item.pk,
+        'name':item.name,
+        'price':item.price,
       }
-      order_items['items'].append(item_data)
+      order_items.append(item_data)
 
-      price = 0
-      item_ids = []
+    price = 0
+    item_ids = []
 
-      for item in order_items['items']:
-        price +=item['price']
-        item_ids.append(item['id'])
-      
-      order = OrderModel.objects.create(price=price)
-      order.item.add(*item_ids)
+    for item in order_items:
+      item_ids.append(item['pk'])
+      price += item['price']
+    order = OrderModel.objects.create(price=price)
+    order.item.add(*item_ids)
 
-      context = {
-        'items': order_items['items'],
-        'price': price
-      }
-
+    context = {
+      'orders': order
+    }
     return render(request, 'customer/order_confirmation.html', context)
+
+    
+
+
