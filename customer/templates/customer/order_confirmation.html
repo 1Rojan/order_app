@@ -82,9 +82,9 @@ const csrftoken = getCookie('csrftoken');
         // Show a confirmation message to the buyer
         $.ajax({
             url: '{%url "about"%}',
-            // beforeSend: function(request){
-            //     request.setRequestHeader('X-CSRFToken', csrftoken)
-            // },
+            beforeSend: function(request){
+                request.setRequestHeader('X-CSRFToken', csrftoken)
+            },
             
             data: JSON.stringify({'is_paid':true}),
             success:function(data){
