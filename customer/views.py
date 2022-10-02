@@ -1,5 +1,5 @@
 from unicodedata import category
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import conf
 from django.views import View
 
@@ -39,19 +39,41 @@ class Order(View):
     for item in order_items:
       item_ids.append(item['pk'])
       price += item['price']
-    order = OrderModel.objects.create(
+      order = OrderModel.objects.create(
       price=price,
       email=request.POST.get('email'),
       street=request.POST.get('street'),
       city=request.POST.get('city'),
       state=request.POST.get('state')
       )
-    order.item.add(*item_ids)
-    context = {
-      'orders': order
-    }
-    return render(request, 'customer/order_confirmation.html', context)
+      order.item.add(*item_ids)
+      context = {
+        'orders': order
+      }
 
+    return redirect('order_confirmation', pk=order.pk)
     
+
+class OrderConfirmation(View):
+  def get(self, request, pk, *args, **kwargs):
+    order = OrderModel.objects.get(pk=pk)
+    # context = {
+    #   'pk':order.pk,
+    #   'items':order.item,
+    #   'price':order.price
+    # }
+
+    return render(request, 'customer/order_confirmation.html', {'orders':order, 'pk':order.pk})
+
+  def post(self, request, pk, *args, **kwargs):
+    import pdb
+    pdb.set_trace()
+    print(request.body)
+    return redirect('payment_confirmation')
+
+
+class OrderPayConfirmation(View):
+  def get(self, request, *args, **kwargs):
+    return render(request, 'customer/order_pay_confirmatin.html')
 
 
